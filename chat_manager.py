@@ -40,7 +40,7 @@ def create_chat_room(user_a_id: int, user_b_id: int) -> str:
         "messages": {}
     })
 
-    base = os.getenv("WEB_CHAT_BASE", "http://localhost:8000")
+    base = os.getenv("WEB_CHAT_BASE", "http://localhost:5000")
     # each user gets their own link with ?me=<id> so messages show their name/id
     link_a = f"{base}/chat?room={room_id}&me={user_a_id}"
     link_b = f"{base}/chat?room={room_id}&me={user_b_id}"

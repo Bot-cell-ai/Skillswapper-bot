@@ -110,5 +110,5 @@ def chat_page():
     html = CHAT_HTML.replace("%CLIENT_CONFIG%", json.dumps(CLIENT_CONFIG))
     return Response(html, mimetype="text/html")
 
-def start_web(host="0.0.0.0", port=5000):
+def start_web(host="0.0.0.0", port=8000):
     app.run(host=host, port=port)

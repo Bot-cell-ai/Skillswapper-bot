@@ -216,12 +216,12 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
         except Exception:
             logger.exception("Could not message matched user.")
 
-         # --- Delete exactly the two matched users (in one safe call)
-        try:
-            deleted = sheet_manager.delete_matched_users(user_id, matched_user_id)
-            logger.info("Deleted %d rows for matched users %s & %s", deleted, user_id, matched_user_id)
-        except Exception as e:
-            logger.exception("Failed to delete matched users after matching: %s", e)
+         # --- Delete exactly the two matched users (safe)
+try:
+    deleted = sheet_manager.delete_matched_users(user_id, matched_user_id)
+    logger.info("Deleted %d rows for matched users %s & %s", deleted, user_id, matched_user_id)
+except Exception as e:
+    logger.exception("Failed to delete matched users after matching: %s", e)
 
     else:
         try:

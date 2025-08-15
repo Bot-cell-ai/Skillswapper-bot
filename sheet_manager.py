@@ -28,10 +28,20 @@ def get_all_records():
     return sheet.get_all_records()
 
 
-def delete_user_by_id(user_id: str):
-    """Delete first row with matching User ID (header is row 1)."""
+def delete_matched_users(user_id_1: str, user_id_2: str):
+    """
+    Delete both matched users from the sheet by their User IDs.
+    Keeps all unmatched users intact.
+    """
+    ids_to_delete = {str(user_id_1), str(user_id_2)}
     records = sheet.get_all_records()
-    for i, record in enumerate(records, start=2):
-        if str(record.get("User ID")) == str(user_id):
-            sheet.delete_rows(i)
-            break
+
+    # Find rows for these IDs (row indexing starts at 2 due to header row)
+    rows_to_delete = [
+        idx for idx, record in enumerate(records, start=2)
+        if str(record.get("User ID")) in ids_to_delete
+    ]
+
+    # Delete from bottom to top to avoid row shifting issues
+    for row_num in sorted(rows_to_delete, reverse=True):
+        sheet.delete_rows(row_num)

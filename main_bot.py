@@ -217,18 +217,20 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
             logger.exception("Could not message matched user.")
 
          # --- NEW: delete both matched users safely in one call
-try:
-    sheet_manager.delete_matched_users(str(user_id), str(matched_user_id))
-except Exception as e:
-    logger.exception("Failed to delete matched users after matching: %s", e)
-else:
-    try:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="No match found yet. We'll notify you when a match is available."
-        )
-    except Exception:
-        logger.exception("Failed to send 'no match' message.")
+        try:
+            sheet_manager.delete_matched_users(str(user_id), str(matched_user_id))
+        except Exception as e:
+            logger.exception("Failed to delete matched users after matching: %s", e)
+
+    else:
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="No match found yet. We'll notify you when a match is available."
+            )
+        except Exception:
+            logger.exception("Failed to send 'no match' message.")
+
     context.user_data.clear()
 
 

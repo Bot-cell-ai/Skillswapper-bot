@@ -217,11 +217,11 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
             logger.exception("Could not message matched user.")
 
          # --- Delete both matched users by their skill/want
-try:
-    sheet_manager.delete_user_by_skill_and_want(skill, want)  # delete new user
-    sheet_manager.delete_user_by_skill_and_want(matched_skill, matched_want)  # delete matched user
-except Exception as e:
-    logger.exception("Failed to delete matched users: %s", e)
+        try:
+            sheet_manager.delete_user_by_skill_and_want(skill, want)  # delete new user
+            sheet_manager.delete_user_by_skill_and_want(matched_skill, matched_want)  # delete matched user
+        except Exception as e:
+            logger.exception("Failed to delete matched users: %s", e)
 
     else:
         try:

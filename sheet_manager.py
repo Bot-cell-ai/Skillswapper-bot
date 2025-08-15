@@ -27,76 +27,29 @@ def save_user_row(user_id: int, name: str, skill: str, want: str):
 def get_all_records():
     return sheet.get_all_records()
 
-import logging
-logger = logging.getLogger(__name__)
 
-def _find_uid_col_index() -> int:
+def delete_user_by_id(user_id: str):
+    """Delete first row with matching User ID (header is row 1)."""
+    records = sheet.get_all_records()
+    for i, record in enumerate(records, start=2):
+        if str(record.get("User ID")) == str(user_id):
+            sheet.delete_rows(i)
+            break
+
+def delete_user_by_skill_and_want(skill: str, want: str):
     """
-    Return 1-based column index for header exactly matching "User ID".
-    Raises RuntimeError if header not found.
+    Delete all rows where Skill and Want match exactly the given values.
+    Useful when matching users by skill/want rather than ID.
     """
-    headers = sheet.row_values(1)
-    for idx, h in enumerate(headers, start=1):
-        if str(h).strip() == "User ID":
-            return idx
-    raise RuntimeError(f'Header "User ID" not found. Current headers: {headers}')
-
-def delete_user_by_id(user_id: str) -> bool:
-    """
-    Delete exactly one row whose 'User ID' equals user_id.
-    Returns True if a row was deleted, False if not found.
-    """
-    uid_col = _find_uid_col_index()
-    target = str(user_id).strip()
-
-    col_vals = sheet.col_values(uid_col)  # includes header
-    # scan rows starting from row 2 (skip header)
-    for sheet_row, cell in enumerate(col_vals[1:], start=2):
-        if str(cell).strip() == target:
-            logger.info("delete_user_by_id: deleting row %s for User ID %s", sheet_row, target)
-            sheet.delete_rows(sheet_row)
-            return True
-
-    logger.warning("delete_user_by_id: User ID %s not found (no deletion)", target)
-    return False
-
-def delete_matched_users(user_id_1, user_id_2) -> int:
-    """
-    Delete the two matched users by User ID.
-    Returns number of rows deleted (0,1 or 2).
-    Safety: will never delete more than 2 rows.
-    """
-    uid_col = _find_uid_col_index()
-    targets = {str(user_id_1).strip(), str(user_id_2).strip()}
-    targets.discard("")  # drop any blank
-
-    logger.info("delete_matched_users: looking for IDs %s in column %d", targets, uid_col)
-
-    col_vals = sheet.col_values(uid_col)  # includes header
+    records = sheet.get_all_records()
     rows_to_delete = []
-    seen = set()
 
-    for sheet_row, cell in enumerate(col_vals[1:], start=2):
-        val = str(cell).strip()
-        if val in targets and val not in seen:
-            rows_to_delete.append(sheet_row)
-            seen.add(val)
-            logger.info("delete_matched_users: found %s at row %d", val, sheet_row)
-            if len(seen) == len(targets):
-                break
+    # Find all matching rows
+    for i, record in enumerate(records, start=2):  # start=2 because row 1 is header
+        if str(record.get("Skill", "")).strip().lower() == skill.strip().lower() and \
+           str(record.get("Want", "")).strip().lower() == want.strip().lower():
+            rows_to_delete.append(i)
 
-    # safety check
-    if len(rows_to_delete) > 2:
-        raise RuntimeError(f"Safety: would delete >2 rows: {rows_to_delete}")
-
-    if not rows_to_delete:
-        logger.warning("delete_matched_users: no rows found for targets %s", targets)
-        return 0
-
-    # Delete bottom-up to avoid shifting
-    for r in sorted(rows_to_delete, reverse=True):
-        logger.info("delete_matched_users: deleting row %d", r)
-        sheet.delete_rows(r)
-
-    logger.info("delete_matched_users: deleted %d rows", len(rows_to_delete))
-    return len(rows_to_delete)
+    # Delete from bottom to top so indexes don't shift
+    for row in sorted(rows_to_delete, reverse=True):
+        sheet.delete_rows(row)

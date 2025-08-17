@@ -186,12 +186,17 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
         matched_want = matched.get("Want") or "—"
 
         # --- NEW: create chat room + links for both users
-        try:
-            link_a, link_b, room_id = create_chat_room(user_id,
-                                                       matched_user_id)
-        except Exception:
-            logger.exception("Failed to create chat room")
-            link_a = link_b = "Chat temporarily unavailable."
+try:
+    # OLD:
+    # link_a, link_b, room_id = create_chat_room(user_id, matched_user_id)
+
+    # NEW: pass names so header shows both sides and URL carries names
+    link_a, link_b, room_id = create_chat_room(
+        user_id, matched_user_id, user_a_name=name, user_b_name=matched_name
+    )
+except Exception:
+    logger.exception("Failed to create chat room")
+    link_a = link_b = "Chat temporarily unavailable."
 
         # notify new user
         try:
@@ -216,12 +221,11 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
         except Exception:
             logger.exception("Could not message matched user.")
 
-         # --- Delete both matched users by their skill/want
+         # --- NEW: delete both users from sheet by skill/want match
         try:
-            sheet_manager.delete_user_by_skill_and_want(skill, want)  # delete new user
-            sheet_manager.delete_user_by_skill_and_want(matched_skill, matched_want)  # delete matched user
+            sheet_manager.delete_matched_pair(new_row)
         except Exception as e:
-            logger.exception("Failed to delete matched users: %s", e)
+            logger.exception("Failed to delete users after matching: %s", e)
 
     else:
         try:

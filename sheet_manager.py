@@ -28,28 +28,36 @@ def get_all_records():
     return sheet.get_all_records()
 
 
-def delete_user_by_id(user_id: str):
-    """Delete first row with matching User ID (header is row 1)."""
-    records = sheet.get_all_records()
-    for i, record in enumerate(records, start=2):
-        if str(record.get("User ID")) == str(user_id):
-            sheet.delete_rows(i)
-            break
+from matcher import find_one_match  # ADD THIS AT TOP
 
-def delete_user_by_skill_and_want(skill: str, want: str):
+def delete_matched_pair(new_row: dict):
     """
-    Delete all rows where Skill and Want match exactly the given values.
-    Useful when matching users by skill/want rather than ID.
+    Delete both users (the new_row and the matched row) based on Skill/Want matching rules.
     """
+    all_rows = sheet.get_all_records()
+    match = find_one_match(new_row, all_rows)
+    if not match:
+        return False
+
+    def _clean(s):
+        return (s or "").strip().lower()
+
+    new_skill = _clean(new_row.get("Skill"))
+    new_want = _clean(new_row.get("Want"))
+    match_skill = _clean(match.get("Skill"))
+    match_want = _clean(match.get("Want"))
+
+    # Collect rows to delete (find them in the sheet by comparing skill/want)
     records = sheet.get_all_records()
     rows_to_delete = []
-
-    # Find all matching rows
-    for i, record in enumerate(records, start=2):  # start=2 because row 1 is header
-        if str(record.get("Skill", "")).strip().lower() == skill.strip().lower() and \
-           str(record.get("Want", "")).strip().lower() == want.strip().lower():
+    for i, record in enumerate(records, start=2):  # row 1 is header
+        skill = _clean(record.get("Skill"))
+        want = _clean(record.get("Want"))
+        if (skill == new_skill and want == new_want) or \
+           (skill == match_skill and want == match_want):
             rows_to_delete.append(i)
 
-    # Delete from bottom to top so indexes don't shift
     for row in sorted(rows_to_delete, reverse=True):
         sheet.delete_rows(row)
+
+    return True

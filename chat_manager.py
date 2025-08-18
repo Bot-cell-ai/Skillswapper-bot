@@ -49,7 +49,7 @@ def create_chat_room(user_a_id: int, user_b_id: int, user_a_name: str = "", user
         "messages": {}
     })
 
-    base = os.getenv("WEB_CHAT_BASE", "http://localhost:8000")
+    base = os.getenv("WEB_CHAT_BASE", "https://yourproject.username.repl.co")
     # each user gets their own link with encoded names
     link_a = (
         f"{base}/chat?room={room_id}"

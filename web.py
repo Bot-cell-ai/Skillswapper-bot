@@ -1,4 +1,3 @@
-
 # web.py
 import os
 import json
@@ -73,7 +72,7 @@ CHAT_HTML = r"""<!doctype html>
         var(--bg);
       background-size:24px 24px;
     }
-    .group{margin:8px 0; display:flex; gap:10px; align-items:flex-end;}
+    .group{display:flex; gap:10px; align-items:flex-end; margin:8px 0;}
     .group.me{justify-content:flex-end}
     .bubble{
       max-width:min(76%, 720px);

@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     # 1) start Flask web server in a background thread
-    t_web = threading.Thread(target=start_web, kwargs={"host": "0.0.0.0", "port": 5000}, daemon=True)
+    t_web = threading.Thread(target=start_web, kwargs={"host": "0.0.0.0", "port": 8000}, daemon=True)
     t_web.start()
-    logger.info("Web server started on http://0.0.0.0:5000")
+    logger.info("Web server started on http://0.0.0.0:8000")
 
     # 2) start Firebase cleanup thread (removes expired chats)
     start_cleanup_thread()

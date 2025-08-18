@@ -288,43 +288,44 @@ CHAT_HTML = r"""<!doctype html>
         const group = document.createElement('div');
         group.className = 'group ' + (isMe ? 'me' : 'peer');
 
-        // avatar (only for peer side for cleaner look; show for me on small screens if you want)
-        if(!isMe){
-          const av = document.createElement('div');
-          av.className = 'avatar';
-          av.textContent = initials(m.senderName || peerName);
-          av.style.background = colorFromName(m.senderName || peerName);
-          group.appendChild(av);
-        }else{
-          // keep spacing aligned
+        // avatar for both sides
+        const av = document.createElement('div');
+        av.className = 'avatar';
+        av.textContent = initials(m.senderName || (isMe ? myName : peerName));
+        av.style.background = colorFromName(m.senderName || (isMe ? myName : peerName));
+
+        if(isMe){
+          // my avatar on the right
+          group.appendChild(document.createElement('div')); // spacer for alignment
           const spacer = document.createElement('div');
-          spacer.style.width = '40px';
-          spacer.style.height = '1px';
+          spacer.style.flex = "1";
           group.appendChild(spacer);
-        }
 
-        const bubble = document.createElement('div');
-        bubble.className = 'bubble ' + (isMe ? 'me' : 'peer');
+          const bubbleWrapper = document.createElement('div');
+          bubbleWrapper.style.display = "flex";
+          bubbleWrapper.style.alignItems = "flex-end";
+          bubbleWrapper.style.gap = "8px";
 
-        const text = document.createElement('div');
-        text.className = 'msg-text';
-        text.textContent = m.text || '';
-        bubble.appendChild(text);
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble me';
 
-        const meta = document.createElement('div');
-        meta.className = 'meta';
+          const text = document.createElement('div');
+          text.className = 'msg-text';
+          text.textContent = m.text || '';
+          bubble.appendChild(text);
 
-        const time = document.createElement('span');
-        time.className = 'time';
-        time.textContent = fmtTime(m.time || Date.now());
-        meta.appendChild(time);
+          const meta = document.createElement('div');
+          meta.className = 'meta';
 
-        const ticks = document.createElement('span');
-        ticks.className = 'ticks';
-        ticks.dataset.ts = String(m.time || 0);
+          const time = document.createElement('span');
+          time.className = 'time';
+          time.textContent = fmtTime(m.time || Date.now());
+          meta.appendChild(time);
 
-        if (isMe){
-          // single tick (sent) by default
+          const ticks = document.createElement('span');
+          ticks.className = 'ticks';
+          ticks.dataset.ts = String(m.time || 0);
+
           if ((m.time || 0) <= peerLastReadAt){
             ticks.textContent = '✔✔ Seen';
           } else {
@@ -332,10 +333,38 @@ CHAT_HTML = r"""<!doctype html>
             ticks.style.opacity = 0.7;
           }
           meta.appendChild(ticks);
+
+          bubble.appendChild(meta);
+
+          bubbleWrapper.appendChild(bubble);
+          bubbleWrapper.appendChild(av);  // avatar at right
+          group.appendChild(bubbleWrapper);
+
+        } else {
+          // peer avatar on left
+          group.appendChild(av);
+
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble peer';
+
+          const text = document.createElement('div');
+          text.className = 'msg-text';
+          text.textContent = m.text || '';
+          bubble.appendChild(text);
+
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+
+          const time = document.createElement('span');
+          time.className = 'time';
+          time.textContent = fmtTime(m.time || Date.now());
+          meta.appendChild(time);
+
+          bubble.appendChild(meta);
+
+          group.appendChild(bubble);
         }
 
-        bubble.appendChild(meta);
-        group.appendChild(bubble);
         chatEl.appendChild(group);
       }
 

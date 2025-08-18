@@ -173,41 +173,4 @@ CHAT_HTML = """<!doctype html>
         }
       }
 
-      // live updates
-      messagesRef.on('child_added', (snap) => {
-        const m = snap.val();
-        if (!m) return;
-        addBubble(String(m.senderId) === String(meId), m.sender || 'User', m.text || '', m.time || Date.now());
-      });
-
-      // send
-      const doSend = () => {
-        const text = (input.value || '').trim();
-        if (!text) return;
-        const msgRef = messagesRef.push();
-        msgRef.set({
-          text,
-          time: Date.now(),
-          sender: myName,
-          senderId: meId || 'anon'
-        });
-        input.value = '';
-      };
-
-      send.onclick = doSend;
-      input.onkeyup = (e) => { if (e.key === 'Enter') doSend(); };
-    }
-
-    init();
-  </script>
-</body>
-</html>
-"""
-
-@app.route("/chat")
-def chat_page():
-    html = CHAT_HTML.replace("%CLIENT_CONFIG%", json.dumps(CLIENT_CONFIG))
-    return Response(html, mimetype="text/html")
-
-def start_web(host="0.0.0.0", port=8000):
-    app.run(host=host, port=port)
+      // live upda

@@ -49,19 +49,10 @@ def create_chat_room(user_a_id: int, user_b_id: int, user_a_name: str = "", user
         "messages": {}
     })
 
-    # Use the correct Replit URL format - get the current domain from REPL_URL
-    repl_url = os.getenv('REPL_URL', '')
-    if repl_url:
-        # Extract just the domain part (remove https:// and any path)
-        base_domain = repl_url.replace('https://', '').split('/')[0]
-        base = f"https://{base_domain}"
-    else:
-        # Fallback to manual construction
-        repl_slug = os.getenv('REPL_SLUG', 'skillswapper')
-        repl_owner = os.getenv('REPL_OWNER', 'username')
-        base = f"https://{repl_slug}--{repl_owner}.repl.co"
-
-    base = os.getenv("WEB_CHAT_BASE", base)
+    # Use the correct Replit URL format
+    repl_slug = os.getenv('REPL_SLUG', 'skillswapper')
+    repl_owner = os.getenv('REPL_OWNER', 'username')
+    base = os.getenv("WEB_CHAT_BASE", f"https://{repl_slug}--{repl_owner}.repl.co")
     # each user gets their own link with encoded names
     link_a = (
         f"{base}/chat?room={room_id}"

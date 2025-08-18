@@ -187,13 +187,7 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
 
         # --- NEW: create chat room + links for both users
         try:
-            # OLD:
-            # link_a, link_b, room_id = create_chat_room(user_id, matched_user_id)
-
-            # NEW: pass names so header shows both sides and URL carries names
-            link_a, link_b, room_id = create_chat_room(
-                user_id, matched_user_id, user_a_name=name, user_b_name=matched_name
-            )
+            link_a, link_b, room_id = create_chat_room(user_id, matched_user_id)
         except Exception:
             logger.exception("Failed to create chat room")
             link_a = link_b = "Chat temporarily unavailable."

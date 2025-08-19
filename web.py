@@ -410,10 +410,26 @@ CHAT_HTML = r"""<!doctype html>
 </html>
 """
 
+@app.route("/")
+def home():
+    return """
+    <h1>SkillSwapper Server</h1>
+    <p>Welcome to SkillSwapper!</p>
+    <p>Use the chat links provided by the Telegram bot to access chat rooms.</p>
+    """
+
 @app.route("/chat")
 def chat_page():
     html = CHAT_HTML.replace("%CLIENT_CONFIG%", json.dumps(CLIENT_CONFIG))
     return Response(html, mimetype="text/html")
+
+@app.errorhandler(404)
+def not_found(error):
+    return """
+    <h1>404 - Page Not Found</h1>
+    <p>The requested page could not be found.</p>
+    <p><a href="/">Go to home</a></p>
+    """, 404
 
 def start_web(host="0.0.0.0", port=8000):
     app.run(host=host, port=port)

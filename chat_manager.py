@@ -40,19 +40,7 @@ def create_chat_room(user_a_id: int, user_b_id: int) -> str:
         "messages": {}
     })
 
-    # Get the Repl URL automatically
-    repl_url = os.getenv("REPL_URL")
-    if repl_url:
-        base = repl_url
-    else:
-        # Fallback: construct from REPL_SLUG and REPL_OWNER if available
-        repl_slug = os.getenv("REPL_SLUG", "")
-        repl_owner = os.getenv("REPL_OWNER", "")
-        if repl_slug and repl_owner:
-            base = f"https://{repl_slug}.{repl_owner}.repl.co"
-        else:
-            base = os.getenv("WEB_CHAT_BASE", "http://localhost:8000")
-    
+    base = os.getenv("WEB_CHAT_BASE", "http://localhost:8000")
     # each user gets their own link with ?me=<id> so messages show their name/id
     link_a = f"{base}/chat?room={room_id}&me={user_a_id}"
     link_b = f"{base}/chat?room={room_id}&me={user_b_id}"

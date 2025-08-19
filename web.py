@@ -285,18 +285,21 @@ CHAT_HTML = r"""<!doctype html>
       // Render one message node
       function renderMsg(key, m){
         const isMe = (m.senderId === myId);
+        const senderName = m.senderName || (isMe ? myName : peerName);
+        const avatarLetter = initials(senderName);
+        const avatarColor = colorFromName(senderName);
+
         const group = document.createElement('div');
         group.className = 'group ' + (isMe ? 'me' : 'peer');
 
         // avatar for both sides
         const av = document.createElement('div');
         av.className = 'avatar';
-        av.textContent = initials(m.senderName || (isMe ? myName : peerName));
-        av.style.background = colorFromName(m.senderName || (isMe ? myName : peerName));
+        av.textContent = avatarLetter;
+        av.style.background = avatarColor;
 
         if(isMe){
           // my avatar on the right
-          group.appendChild(document.createElement('div')); // spacer for alignment
           const spacer = document.createElement('div');
           spacer.style.flex = "1";
           group.appendChild(spacer);

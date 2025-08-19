@@ -16,6 +16,7 @@ from telegram.ext import (
 import sheet_manager
 import matcher
 from chat_manager import create_chat_room  # NEW
+from referral import start_referral, invite, points, rewards
 
 # --------------- CONFIG ----------------
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]  # CHANGED: read from secret
@@ -41,6 +42,9 @@ def _inline_none_back_markup():
 
 # --------------- handlers ----------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Handle referral logic first
+    await start_referral(update, context)
+    
     await update.message.reply_text(
         "👋 Welcome to SkillSwapper!\n\nWhat's your name?")
     return STATE_NAME
@@ -260,5 +264,11 @@ def main():
     )
 
     app.add_handler(conv)
+    
+    # Add referral system commands
+    app.add_handler(CommandHandler("invite", invite))
+    app.add_handler(CommandHandler("points", points))
+    app.add_handler(CommandHandler("rewards", rewards))
+    
     logging.getLogger(__name__).info("Bot starting...")
     app.run_polling()

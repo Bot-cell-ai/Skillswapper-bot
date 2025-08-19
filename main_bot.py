@@ -16,7 +16,7 @@ from telegram.ext import (
 import sheet_manager
 import matcher
 from chat_manager import create_chat_room  # NEW
-from referral import start_referral, invite, points, rewards
+from referral import start_referral, invite, points, rewards, menu, menu_buttons, complete_use, can_user_use_bot
 
 # --------------- CONFIG ----------------
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]  # CHANGED: read from secret
@@ -42,8 +42,17 @@ def _inline_none_back_markup():
 
 # --------------- handlers ----------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    
     # Handle referral logic first
     await start_referral(update, context)
+    
+    # Check if user can use the bot
+    if not can_user_use_bot(user_id):
+        await update.message.reply_text(
+            "❌ You've used your free trial.\nInvite a friend to continue using the bot.\nUse /menu to see referral options."
+        )
+        return ConversationHandler.END
     
     await update.message.reply_text(
         "👋 Welcome to SkillSwapper!\n\nWhat's your name?")
@@ -224,6 +233,12 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
             sheet_manager.delete_matched_pair(new_row)
         except Exception as e:
             logger.exception("Failed to delete users after matching: %s", e)
+        
+        # Mark user's first use as complete if this was their first match
+        try:
+            await complete_use_for_user(context, user_id)
+        except Exception as e:
+            logger.exception("Failed to complete use for user: %s", e)
 
     else:
         try:
@@ -236,6 +251,28 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
 
     context.user_data.clear()
 
+
+async def complete_use_for_user(context: ContextTypes.DEFAULT_TYPE, user_id: int):
+    """Helper to mark user's first use as complete"""
+    from referral import db_connect
+    conn = db_connect()
+    c = conn.cursor()
+    
+    c.execute("SELECT first_use_done FROM users WHERE user_id=?", (user_id,))
+    first_use = c.fetchone()
+    if first_use and first_use[0] == 0:
+        c.execute("UPDATE users SET first_use_done=1 WHERE user_id=?", (user_id,))
+        conn.commit()
+        try:
+            await context.bot.send_message(
+                chat_id=user_id,
+                text="✅ Your free trial is complete!\n\n"
+                     "👉 To continue, invite at least 1 friend using your referral link.\n"
+                     "Use /invite to get your link, /points to check progress, /rewards for unlocks."
+            )
+        except Exception:
+            pass
+    conn.close()
 
 # -------------- setup & run -------------
 def main():
@@ -269,6 +306,9 @@ def main():
     app.add_handler(CommandHandler("invite", invite))
     app.add_handler(CommandHandler("points", points))
     app.add_handler(CommandHandler("rewards", rewards))
+    app.add_handler(CommandHandler("menu", menu))
+    app.add_handler(CommandHandler("complete_use", complete_use))
+    app.add_handler(CallbackQueryHandler(menu_buttons))
     
     logging.getLogger(__name__).info("Bot starting...")
     app.run_polling()

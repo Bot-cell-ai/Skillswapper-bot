@@ -49,8 +49,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Check if user can use the bot
     if not can_user_use_bot(user_id):
+        from referral import get_user_daily_limit, reset_daily_usage
+        reset_daily_usage(user_id)
+        daily_limit = get_user_daily_limit(user_id)
+        
         await update.message.reply_text(
-            "❌ You've used your free trial.\nInvite a friend to continue using the bot.\nUse /menu to see referral options."
+            f"⚠️ You've reached your daily usage limit of {daily_limit} matches!\n"
+            f"Invite friends using your referral link to unlock more matches.\n"
+            f"Use /menu to see referral options or come back tomorrow."
         )
         return ConversationHandler.END
     
@@ -253,8 +259,12 @@ async def _save_and_match(context: ContextTypes.DEFAULT_TYPE,
 
 
 async def complete_use_for_user(context: ContextTypes.DEFAULT_TYPE, user_id: int):
-    """Helper to mark user's first use as complete"""
-    from referral import db_connect
+    """Helper to mark user's first use as complete and increment daily usage"""
+    from referral import db_connect, increment_usage, get_user_daily_limit, has_reached_limit
+    
+    # Increment daily usage
+    increment_usage(user_id)
+    
     conn = db_connect()
     c = conn.cursor()
     
@@ -263,15 +273,35 @@ async def complete_use_for_user(context: ContextTypes.DEFAULT_TYPE, user_id: int
     if first_use and first_use[0] == 0:
         c.execute("UPDATE users SET first_use_done=1 WHERE user_id=?", (user_id,))
         conn.commit()
+    
+    # Check if they've reached their daily limit
+    if has_reached_limit(user_id):
         try:
             await context.bot.send_message(
                 chat_id=user_id,
-                text="✅ Your free trial is complete!\n\n"
-                     "👉 To continue, invite at least 1 friend using your referral link.\n"
-                     "Use /invite to get your link, /points to check progress, /rewards for unlocks."
+                text="✅ Your details are saved!\n\n"
+                     "⚠️ You've now reached today's usage limit. "
+                     "Invite friends to unlock more matches or come back tomorrow.\n"
+                     "Use /menu to see referral options."
             )
         except Exception:
             pass
+    else:
+        daily_limit = get_user_daily_limit(user_id)
+        c.execute("SELECT daily_usage FROM users WHERE user_id=?", (user_id,))
+        usage_result = c.fetchone()
+        daily_usage = usage_result[0] if usage_result else 0
+        remaining = daily_limit - daily_usage
+        
+        try:
+            await context.bot.send_message(
+                chat_id=user_id,
+                text="✅ Your details are saved! You'll be matched soon.\n"
+                     f"👉 Remaining uses today: {remaining}"
+            )
+        except Exception:
+            pass
+    
     conn.close()
 
 # -------------- setup & run -------------

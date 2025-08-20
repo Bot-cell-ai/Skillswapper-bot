@@ -16,6 +16,7 @@ deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 8000
+externalPort = 8000
 
 [workflows]
 runButton = "Start Bot"

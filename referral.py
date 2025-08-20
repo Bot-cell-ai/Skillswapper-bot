@@ -198,11 +198,86 @@ async def menu_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     if query.data == "menu_invite":
-        await invite(query, context)
+        await invite_callback(update, context)
     elif query.data == "menu_points":
-        await points(query, context)
+        await points_callback(update, context)
     elif query.data == "menu_rewards":
-        await rewards(query, context)
+        await rewards_callback(update, context)
+
+async def invite_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Generate and send referral link from callback."""
+    user_id = update.effective_user.id
+    bot_username = context.bot.username
+    
+    referral_link = f"https://t.me/{bot_username}?start={user_id}"
+    
+    await update.callback_query.edit_message_text(
+        f"🔗 Your referral link:\n{referral_link}\n\n"
+        f"Share this with friends to unlock more uses of the bot!\n"
+        f"Each friend that joins gives you another use."
+    )
+
+async def points_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show user's referral stats from callback."""
+    user_id = update.effective_user.id
+    
+    conn = db_connect()
+    c = conn.cursor()
+    
+    c.execute("SELECT referred_count, first_use_done FROM users WHERE user_id=?", (user_id,))
+    result = c.fetchone()
+    conn.close()
+    
+    if not result:
+        await update.callback_query.edit_message_text("You haven't started using the bot yet. Use /start to begin!")
+        return
+    
+    referred_count, first_use_done = result
+    
+    status = "Used" if first_use_done else "Available"
+    
+    await update.callback_query.edit_message_text(
+        f"📊 Your Stats:\n\n"
+        f"👥 Friends referred: {referred_count}\n"
+        f"🎫 Free trial: {status}\n"
+        f"✅ Bot uses available: {'Yes' if can_user_use_bot(user_id) else 'No'}\n\n"
+        f"💡 Each referral = 1 more use!"
+    )
+
+async def rewards_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show rewards/achievements from callback."""
+    user_id = update.effective_user.id
+    
+    conn = db_connect()
+    c = conn.cursor()
+    
+    c.execute("SELECT referred_count FROM users WHERE user_id=?", (user_id,))
+    result = c.fetchone()
+    conn.close()
+    
+    referred_count = result[0] if result else 0
+    
+    rewards_text = "🏆 Rewards & Achievements:\n\n"
+    
+    # Basic rewards
+    if referred_count >= 1:
+        rewards_text += "✅ First Referral - Bot access unlocked!\n"
+    else:
+        rewards_text += "❌ First Referral - Invite 1 friend\n"
+    
+    if referred_count >= 5:
+        rewards_text += "✅ Social Butterfly - 5 referrals!\n"
+    else:
+        rewards_text += f"❌ Social Butterfly - {referred_count}/5 referrals\n"
+    
+    if referred_count >= 10:
+        rewards_text += "✅ Community Builder - 10 referrals!\n"
+    else:
+        rewards_text += f"❌ Community Builder - {referred_count}/10 referrals\n"
+    
+    rewards_text += f"\n💡 You have {referred_count} bot uses from referrals"
+    
+    await update.callback_query.edit_message_text(rewards_text)
 
 async def complete_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Mark user's first use as complete (admin/debug command)."""

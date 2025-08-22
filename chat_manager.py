@@ -42,8 +42,24 @@ def create_chat_room(user_a_id: int, user_b_id: int) -> str:
 
     base = os.getenv("WEB_CHAT_BASE", "http://localhost:8000")
     # each user gets their own link with ?me=<id> so messages show their name/id
-    link_a = f"{base}/chat?room={room_id}&me={user_a_id}"
-    link_b = f"{base}/chat?room={room_id}&me={user_b_id}"
+from urllib.parse import quote
+
+def create_chat_room(user_a_id: int, user_b_id: int, name_a: str = "Me", name_b: str = "Partner"):
+    room_id = uuid.uuid4().hex[:16]
+    ref = db.reference(f"chats/{room_id}")
+    created = _now_utc()
+    expires = created + timedelta(hours=24)
+
+    ref.set({
+        "users": { str(user_a_id): True, str(user_b_id): True },
+        "created_at": _iso(created),
+        "expires_at": _iso(expires),
+        "messages": {}
+    })
+
+    base = os.getenv("WEB_CHAT_BASE", "http://localhost:8000")
+    link_a = f"{base}/chat?room={room_id}&me={user_a_id}&myName={quote(name_a)}&peer={user_b_id}&peerName={quote(name_b)}"
+    link_b = f"{base}/chat?room={room_id}&me={user_b_id}&myName={quote(name_b)}&peer={user_a_id}&peerName={quote(name_a)}"
     return link_a, link_b, room_id
 
 def delete_chat_room(room_id: str):

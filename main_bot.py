@@ -18,6 +18,8 @@ import matcher
 from chat_manager import create_chat_room  # NEW
 from referral import send_referral_reminder
 
+import telegram
+print("Using python-telegram-bot version:", telegram.__version__)
 # --------------- CONFIG ----------------
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]  # CHANGED: read from secret
 logging.basicConfig(level=logging.INFO)

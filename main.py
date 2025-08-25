@@ -1,7 +1,7 @@
 import os
 import threading
 from flask import Flask
-from telegram.ext import Application
+from telegram.ext import Application, CommandHandler
 
 # --- Flask Setup ---
 app = Flask(__name__)
@@ -11,11 +11,17 @@ def home():
     return "Bot is running!", 200
 
 # --- Telegram Bot Setup ---
-TOKEN = os.getenv("BOT_TOKEN")   # set this in Render environment variables
+TOKEN = os.getenv("BOT_TOKEN")   # must be set in Render Environment Variables
+
+if not TOKEN:
+    raise ValueError("❌ BOT_TOKEN is missing. Set it in Render → Environment Variables.")
+TOKEN = TOKEN.strip()
+
+print(f"✅ BOT_TOKEN loaded (starts with: {TOKEN[:8]}...)")  # log check
+
 application = Application.builder().token(TOKEN).build()
 
 # Example handler
-from telegram.ext import CommandHandler
 async def start(update, context):
     await update.message.reply_text("Hello! I am alive 🚀")
 application.add_handler(CommandHandler("start", start))

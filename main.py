@@ -1,21 +1,34 @@
-# main.py
+import os
 import threading
-import logging
-from web import start_web
-from chat_manager import start_cleanup_thread
-from main_bot import main as run_bot
+from flask import Flask
+from telegram.ext import Application
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# --- Flask Setup ---
+app = Flask(__name__)
 
+@app.route("/")
+def home():
+    return "Bot is running!", 200
+
+# --- Telegram Bot Setup ---
+TOKEN = os.getenv("BOT_TOKEN")   # set this in Render environment variables
+application = Application.builder().token(TOKEN).build()
+
+# Example handler
+from telegram.ext import CommandHandler
+async def start(update, context):
+    await update.message.reply_text("Hello! I am alive 🚀")
+application.add_handler(CommandHandler("start", start))
+
+# --- Run Telegram Bot in Background ---
+def run_bot():
+    application.run_polling()
+
+# --- Entry Point ---
 if __name__ == "__main__":
-    # 1) start Flask web server in a background thread
-    t_web = threading.Thread(target=start_web, kwargs={"host": "0.0.0.0", "port": 8000}, daemon=True)
-    t_web.start()
-    logger.info("Web server started on http://0.0.0.0:8000")
+    # Start Telegram bot in background thread
+    threading.Thread(target=run_bot, daemon=True).start()
 
-    # 2) start Firebase cleanup thread (removes expired chats)
-    start_cleanup_thread()
-
-    # 3) run Telegram bot (blocking)
-    run_bot()
+    # Run Flask (important: must use PORT from Render)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

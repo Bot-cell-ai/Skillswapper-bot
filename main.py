@@ -1,4 +1,15 @@
 import os
+
+# 🚨 Clean environment from wrong packages on Render
+os.system("pip uninstall -y telegram")
+os.system("pip uninstall -y telegram-bot")
+os.system("pip uninstall -y python-telegram-bot")
+os.system("pip install python-telegram-bot==20.7 --no-cache-dir")
+
+# Now safe to import PTB
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
+import telegram
+print("🚀 Running with python-telegram-bot version:", telegram.__version__)
 from flask import Flask
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
